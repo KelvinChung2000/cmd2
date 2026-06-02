@@ -130,6 +130,8 @@ from .constants import (
     HELP_FUNC_PREFIX,
 )
 from .decorators import (
+    DEPRECATION_HELP_MARKER,
+    CommandDeprecation,
     as_subcommand_to,
     with_argparser,
 )
@@ -3249,6 +3251,11 @@ class Cmd:
             ):
                 self.history.append(statement)
 
+            # Warn if this command has been marked deprecated with @with_deprecation
+            deprecation = getattr(func, constants.CMD_ATTR_DEPRECATED, None)
+            if isinstance(deprecation, CommandDeprecation):
+                self.pwarning(deprecation.warning_text(statement.command))
+
             try:
                 self.current_command = statement
                 stop = func(statement)
@@ -4310,6 +4317,11 @@ class Cmd:
 
             # Attempt to locate the first documentation block
             cmd_desc = strip_doc_annotations(doc) if doc else ''
+
+            # Annotate deprecated commands with a marker in front of their description
+            if isinstance(getattr(cmd_func, constants.CMD_ATTR_DEPRECATED, None), CommandDeprecation):
+                marker = f'{DEPRECATION_HELP_MARKER} '
+                cmd_desc = f'{marker}{cmd_desc}' if cmd_desc else marker.rstrip()
 
             # Add this command to the table
             topic_table.add_row(command, cmd_desc)

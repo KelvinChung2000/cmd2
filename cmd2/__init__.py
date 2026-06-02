@@ -34,10 +34,12 @@ from .constants import (
     DEFAULT_SHORTCUTS,
 )
 from .decorators import (
+    CommandDeprecation,
     as_subcommand_to,
     with_argparser,
     with_argument_list,
     with_category,
+    with_deprecation,
 )
 from .exceptions import (
     Cmd2ArgparseError,
@@ -79,10 +81,12 @@ __all__: list[str] = [  # noqa: RUF022
     'CompletionItem',
     'Completions',
     # Decorators
+    'CommandDeprecation',
     'with_argument_list',
     'with_argparser',
     'with_category',
     'with_default_category',
+    'with_deprecation',
     'as_subcommand_to',
     # Exceptions
     'Cmd2ArgparseError',

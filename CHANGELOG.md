@@ -88,6 +88,10 @@ prompt is displayed.
     - Add support for Python 3.15 by fixing various bugs related to internal `argparse` changes
     - Added `common_prefix` method to `cmd2.string_utils` module as a replacement for
       `os.path.commonprefix` since that is now deprecated in Python 3.15
+    - Added `cmd2.with_deprecation` decorator to mark a `do_*` command as deprecated. Running the
+      command prints a deprecation warning to `stderr` (with optional `message`, `replacement`, and
+      `removal_version` details) and verbose help annotates the command's description with
+      `(deprecated)`.
 
 ## 3.4.0 (March 3, 2026)
 

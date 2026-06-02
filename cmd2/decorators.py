@@ -5,6 +5,9 @@ from collections.abc import (
     Callable,
     Sequence,
 )
+from dataclasses import (
+    dataclass,
+)
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -54,6 +57,78 @@ def with_category(category: str) -> Callable[[CommandFunc], CommandFunc]:
         return func
 
     return cat_decorator
+
+
+#: Marker prepended to a deprecated command's description in verbose help output.
+DEPRECATION_HELP_MARKER = '(deprecated)'
+
+
+@dataclass(frozen=True)
+class CommandDeprecation:
+    """Deprecation metadata attached to a command by the [cmd2.with_deprecation][] decorator.
+
+    :param message: optional extra detail appended to the generated warning
+    :param replacement: optional name of the command that should be used instead
+    :param removal_version: optional version in which the command will be removed
+    """
+
+    message: str | None = None
+    replacement: str | None = None
+    removal_version: str | None = None
+
+    def warning_text(self, command: str) -> str:
+        """Build the deprecation warning shown when ``command`` is run.
+
+        :param command: the name of the deprecated command being run
+        :return: the composed warning message
+        """
+        text = f"Command '{command}' is deprecated"
+        if self.removal_version is not None:
+            text += f" and will be removed in version {self.removal_version}"
+        text += "."
+        if self.replacement is not None:
+            text += f" Use '{self.replacement}' instead."
+        if self.message is not None:
+            text += f" {self.message}"
+        return text
+
+
+def with_deprecation(
+    *,
+    message: str | None = None,
+    replacement: str | None = None,
+    removal_version: str | None = None,
+) -> Callable[[CommandFunc], CommandFunc]:
+    """Decorate a ``do_*`` command method to mark it as deprecated.
+
+    Running the command prints a deprecation warning to ``stderr`` before the command
+    executes, and the command's description is annotated with ``(deprecated)`` in verbose
+    help output. The command still runs normally.
+
+    :param message: optional extra detail appended to the generated warning
+    :param replacement: optional name of the command that should be used instead
+    :param removal_version: optional version in which the command will be removed
+    :return: the decorated command method
+
+    Example:
+    ```py
+    class MyApp(cmd2.Cmd):
+        @cmd2.with_deprecation(replacement='greet', removal_version='3.0')
+        def do_hello(self, args):
+            self.poutput('Hello')
+    ```
+
+    """
+
+    def deprecation_decorator(func: CommandFunc) -> CommandFunc:
+        setattr(
+            func,
+            constants.CMD_ATTR_DEPRECATED,
+            CommandDeprecation(message=message, replacement=replacement, removal_version=removal_version),
+        )
+        return func
+
+    return deprecation_decorator
 
 
 CmdOrSetClass = TypeVar('CmdOrSetClass', bound=type['Cmd'] | type[CommandSet])
